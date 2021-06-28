@@ -1,10 +1,8 @@
 using System.Threading.Tasks;
-using FluentValidation;
 using JudoPayDotNet.Http;
 using JudoPayDotNet.Logging;
 using JudoPayDotNet.Models;
 using JudoPayDotNet.Models.Internal;
-using JudoPayDotNet.Models.Validations;
 
 namespace JudoPayDotNet.Clients
 {
@@ -15,12 +13,7 @@ namespace JudoPayDotNet.Clients
         private const string ResumeThreeDSecureTwoAddress = "resume3ds";
 
         private const string CompleteThreeDSecureTwoAddress = "complete3ds";
-
-        // Keep 3DS2 validation until JR-4706 is released
-        private readonly IValidator<ResumeThreeDSecureTwoModel> _resumeThreeDSecureValidator = new ResumeThreeDSecureTwoValidator();
-
-        private readonly IValidator<CompleteThreeDSecureTwoModel> _completeThreeDSecureValidator = new CompleteThreeDSecureTwoValidator();
-
+        
         public ThreeDs(ILog logger, IClient client)
             : base(logger, client)
         {
@@ -41,18 +34,13 @@ namespace JudoPayDotNet.Clients
          */
         public Task<IResult<ITransactionResult>> Resume3DSecureTwo(long receiptId, ResumeThreeDSecureTwoModel model)
         {
-
-            // Validate in DotNetSDK until JR-4706 is released
-            var validationError = Validate<ResumeThreeDSecureTwoModel, ITransactionResult>(_resumeThreeDSecureValidator, model);
-
             var address = $"transactions/{receiptId}/{ResumeThreeDSecureTwoAddress}";
 
             // Convert SDK model to internal model
             var internalResumeThreeDSecureTwoModel = InternalResumeThreeDSecureTwoModel.From(model);
 
-            // Do not call the API if validation fail 
-            return validationError != null ? Task.FromResult(validationError) :
-                PutInternal<InternalResumeThreeDSecureTwoModel, ITransactionResult>(address, internalResumeThreeDSecureTwoModel);
+            // Send the request to the API 
+            return PutInternal<InternalResumeThreeDSecureTwoModel, ITransactionResult>(address, internalResumeThreeDSecureTwoModel);
         }
 
         /*
@@ -60,17 +48,13 @@ namespace JudoPayDotNet.Clients
         */
         public Task<IResult<PaymentReceiptModel>> Complete3DSecureTwo(long receiptId, CompleteThreeDSecureTwoModel model)
         {
-            // Validate in DotNetSDK until JR-4706 is released
-            var validationError = Validate<CompleteThreeDSecureTwoModel, PaymentReceiptModel>(_completeThreeDSecureValidator, model);
-
             var address = $"transactions/{receiptId}/{CompleteThreeDSecureTwoAddress}";
 
             // Convert SDK model to internal model
             var internalCompleteThreeDSecureTwoModel = InternalCompleteThreeDSecureTwoModel.From(model);
 
-            // Do not call the API if validation fail 
-            return validationError != null ? Task.FromResult(validationError) :
-                PutInternal<InternalCompleteThreeDSecureTwoModel, PaymentReceiptModel>(address, internalCompleteThreeDSecureTwoModel);
+            // Send the request to the API 
+            return PutInternal<InternalCompleteThreeDSecureTwoModel, PaymentReceiptModel>(address, internalCompleteThreeDSecureTwoModel);
         }
     }
 }
